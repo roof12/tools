@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-repos='gitea codeberg github bogus'
+repos='gitea codeberg github'
 
 found=0
 
