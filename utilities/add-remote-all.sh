@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-repos='gitea codeberg github'
+repos='forgejo codeberg github'
 
 found=0
 
