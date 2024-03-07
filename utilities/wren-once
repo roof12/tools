@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# A wrapper for wren that prompts for a date, creates a one-time task on that date
+
+# Exit if not at least one argument (the text of the filename)
+if [ "$#" -lt 1 ]; then
+	echo Nothing scheduled: no task name given.
+	exit 1
+fi
+FILENAME="${@:1}"
+
+# Read date using zenity
+DATE=$(zenity --calendar --text="Wren task date" --date-format="%Y-%m-%d" --day=$(date --date="tomorrow" +%-d) --month=$(date --date="tomorrow" +%-m) --year=$(date --date="tomorrow" +%Y))
+
+# Call wren
+if [ -n "$DATE" ]; then
+	args=("$DATE" "${@:1}")
+	wren "$DATE $FILENAME"
+else
+	echo Nothing scheduled: no date selected.
+fi
