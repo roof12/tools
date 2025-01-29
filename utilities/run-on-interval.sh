@@ -11,7 +11,7 @@ interval="$1"
 shift
 
 # Get the current day modulo interval
-current_day=$(($(date +%j) % interval))
+current_day=$(($(date +%-j) % interval))
 
 # Check if current day is a multiple of interval
 if [[ $current_day -eq 0 ]]; then
