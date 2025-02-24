@@ -3,6 +3,7 @@
 # Check for a positive integer argument for interval
 if [[ ! $1 =~ ^[1-9][0-9]*$ ]]; then
   echo "Error: Please provide a positive integer as the first argument (interval)."
+  echo Day: $(date +%-j)
   exit 1
 fi
 
