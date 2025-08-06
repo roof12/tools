@@ -27,7 +27,7 @@ def non_negative_int(value):
     return ivalue
 
 
-def main():
+def main(argv=None):
     """Parse arguments and execute command if conditions are met."""
     parser = argparse.ArgumentParser(
         description="Conditionally execute a command based on the day of the year."
@@ -46,7 +46,7 @@ def main():
         help="The command to execute and all its subsequent arguments.",
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if not args.command:
         parser.error("the following arguments are required: command")

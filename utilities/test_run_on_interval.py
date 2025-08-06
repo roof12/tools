@@ -39,50 +39,42 @@ class TestRunOnInterval(unittest.TestCase):
         with self.assertRaises(ValueError):
             non_negative_int("not-a-number")
 
-    @patch("run_on_interval.subprocess.run")
-    @patch("run_on_interval.datetime.date")
-    @patch("sys.argv")
-    def test_command_executes_on_schedule(self, mock_argv, mock_date, mock_run):
+    @patch("utilities.run_on_interval.subprocess.run")
+    @patch("utilities.run_on_interval.datetime.date")
+    def test_command_executes_on_schedule(self, mock_date, mock_run):
         """Test that the command is executed when the day matches the schedule."""
         # (day_of_year - offset) % interval == 0 -> (10 - 0) % 5 == 0
         mock_date.today.return_value.timetuple.return_value.tm_yday = 10
-        mock_argv[:] = ["run_on_interval.py", "5", "0", "echo", "Success"]
         mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=0)
 
         with self.assertRaises(SystemExit) as cm:
-            main()
+            main(["5", "0", "echo", "Success"])
 
         self.assertEqual(cm.exception.code, 0)
         mock_run.assert_called_once_with(["echo", "Success"], check=False)
 
-    @patch("run_on_interval.subprocess.run")
-    @patch("run_on_interval.datetime.date")
-    @patch("sys.argv")
-    def test_command_does_not_execute_off_schedule(
-        self, mock_argv, mock_date, mock_run
-    ):
+    @patch("utilities.run_on_interval.subprocess.run")
+    @patch("utilities.run_on_interval.datetime.date")
+    def test_command_does_not_execute_off_schedule(self, mock_date, mock_run):
         """Test that the command is not executed when the day is off schedule."""
         # (day_of_year - offset) % interval != 0 -> (11 - 0) % 5 != 0
         mock_date.today.return_value.timetuple.return_value.tm_yday = 11
-        mock_argv[:] = ["utilities/run_on_interval.py", "5", "0", "echo", "Success"]
 
         with self.assertRaises(SystemExit) as cm:
-            main()
+            main(["5", "0", "echo", "Success"])
 
         self.assertEqual(cm.exception.code, 0)
         mock_run.assert_not_called()
 
-    @patch("run_on_interval.subprocess.run")
-    @patch("run_on_interval.datetime.date")
-    @patch("sys.argv")
-    def test_exit_code_propagation(self, mock_argv, mock_date, mock_run):
+    @patch("utilities.run_on_interval.subprocess.run")
+    @patch("utilities.run_on_interval.datetime.date")
+    def test_exit_code_propagation(self, mock_date, mock_run):
         """Test that the script's exit code matches the command's exit code."""
         mock_date.today.return_value.timetuple.return_value.tm_yday = 10
-        mock_argv[:] = ["run_on_interval.py", "5", "0", "false"]
         mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=1)
 
         with self.assertRaises(SystemExit) as cm:
-            main()
+            main(["5", "0", "false"])
 
         self.assertEqual(cm.exception.code, 1)
         mock_run.assert_called_once_with(["false"], check=False)
