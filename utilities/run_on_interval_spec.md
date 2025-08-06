@@ -48,5 +48,5 @@ The script must accept arguments using the `argparse` module.
 
 ## Example Usage
 
-./run-on-interval.py 7 0 echo "This runs on a 7-day interval"
-./run-on-interval.py 30 5 ls -l /tmp
+utilities/run_on_interval/run_on_interval.py 7 0 echo "This runs on a 7-day interval"
+utilities/run_on_interval/run_on_interval.py 30 5 ls -l /tmp
