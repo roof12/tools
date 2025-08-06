@@ -1,0 +1,59 @@
+Spec generation request sent to ChatGPT
+
+i would like help writing a spec for a python script, to give to an LLM coding agent.
+
+the script will be a wrapper around the wren utility. wren is a task (todo) manager. it runs on the command line and uses regular files to store the tasks. the filename is the task title. if the file has any text, that is the task content.
+
+the wren config file is usually in ~/.config/wren/wren.json. it contains an entry notes_dir.
+
+future tasks can be scheduled with a date prefix in the filename: "2025-12-15 do something". scheduled tasks do no display until the specified date. repeating tasks are scheduled with a filename prefix like cron: "0 4 * * * do something".
+
+marking tasks as done matches substrings of the filename. if there are multiple matches, wren lists the matches:
+
+wren -d zz
+Error - multiple matching files found:
+- zzbar
+- zzfoo
+
+wren with no args lists all tasks:
+
+wren
+➜ zzbar
+➜ zzfoo
+
+wren commands:
+
+usage: wren [-h] [-l [LS]] [-d [foo]] [-r foo] [-e foo] [--prepend foo] [-o] [-s] [--telegram] [--matrix] [--http] [--version] [task ...]
+
+positional arguments:
+  task                  a new task to be created
+
+options:
+  -h, --help            show this help message and exit
+  -l [LS], --ls [LS], --list [LS]
+                        List all current tasks. add -d to list done tasks
+  -d [foo], --done [foo]
+                        Mark a task as done
+  -r foo, --read foo    Read a task content
+  -e foo, --edit foo    Edit a task content
+  --prepend foo         Prepend something to the task's filename
+  -o, --one             Print one random task
+  -s, --summary         Generate a summary
+  --telegram            Start Telegram bot
+  --matrix              Start Matrix bot
+  --http                Start HTTP server
+  --version             Show Wren version
+
+requirements:
+
+* use the default wren config file location
+* it should take commands. if a command is a wrapper command it will execute them. if not, pass it to wren
+* --help should print the wrapper help, then call wren --help
+
+new functionality:
+
+* with multiple matches, -d should prompt for which one to mark done.
+* -c (cron) should take a task name, print a summary of the cron format, then prompt for the cron line.
+* -f (future) should take a task name, then execute zenity to prompt for the date and create the task: zenity --calendar --text="Wren task date" --date-format="%Y-%m-%d" --day=$(date --date="tomorrow" +%-d) --month=$(date --date="tomorrow" +%-m) --year=$(date --date="tomorrow" +%Y)
+
+
