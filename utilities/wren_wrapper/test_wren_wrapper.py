@@ -44,7 +44,7 @@ class TestWrenWrapper(unittest.TestCase):
         )
 
         # Patch system-level calls
-        self.exit_patch = patch("sys.exit")
+        self.exit_patch = patch("sys.exit", side_effect=SystemExit)
         self.mock_exit = self.exit_patch.start()
 
         self.input_patch = patch("builtins.input")
@@ -82,8 +82,9 @@ class TestWrenWrapper(unittest.TestCase):
 
     def test_find_wren_executable_not_found(self):
         self.mock_which.return_value = None
-        wren_wrapper.find_wren_executable()
-        self.mock_exit.assert_called_once_with(2)
+        with self.assertRaises(SystemExit) as cm:
+            wren_wrapper.find_wren_executable()
+        self.assertEqual(cm.exception.code, 2)
 
     def test_get_notes_dir_success(self):
         notes_dir = wren_wrapper.get_notes_dir()
@@ -91,20 +92,23 @@ class TestWrenWrapper(unittest.TestCase):
 
     def test_get_notes_dir_config_missing(self):
         self.config_path.unlink()
-        wren_wrapper.get_notes_dir()
-        self.mock_exit.assert_called_once_with(2)
+        with self.assertRaises(SystemExit) as cm:
+            wren_wrapper.get_notes_dir()
+        self.assertEqual(cm.exception.code, 2)
 
     def test_get_notes_dir_bad_json(self):
         with self.config_path.open("w", encoding="utf-8") as f:
             f.write("this is not json")
-        wren_wrapper.get_notes_dir()
-        self.mock_exit.assert_called_once_with(2)
+        with self.assertRaises(SystemExit) as cm:
+            wren_wrapper.get_notes_dir()
+        self.assertEqual(cm.exception.code, 2)
 
     def test_get_notes_dir_key_missing(self):
         with self.config_path.open("w", encoding="utf-8") as f:
             json.dump({"another_key": "value"}, f)
-        wren_wrapper.get_notes_dir()
-        self.mock_exit.assert_called_once_with(2)
+        with self.assertRaises(SystemExit) as cm:
+            wren_wrapper.get_notes_dir()
+        self.assertEqual(cm.exception.code, 2)
 
     def test_get_notes_dir_creates_dir_if_missing(self):
         shutil.rmtree(self.notes_dir)
@@ -120,36 +124,40 @@ class TestWrenWrapper(unittest.TestCase):
         task_file.touch()
         done_dir = self.notes_dir / "done"
 
-        wren_wrapper.handle_exact_done(self.notes_dir, task_title)
+        with self.assertRaises(SystemExit) as cm:
+            wren_wrapper.handle_exact_done(self.notes_dir, task_title)
+        self.assertEqual(cm.exception.code, 0)
 
         self.assertFalse(task_file.exists())
         self.assertTrue((done_dir / task_title).exists())
         self.mock_print_quiet.assert_called_once_with(f"Marked done: {task_title}")
-        self.mock_exit.assert_called_once_with(0)
 
     def test_handle_exact_done_task_not_found(self):
-        wren_wrapper.handle_exact_done(self.notes_dir, "non-existent-task")
-        self.mock_exit.assert_called_once_with(1)
+        with self.assertRaises(SystemExit) as cm:
+            wren_wrapper.handle_exact_done(self.notes_dir, "non-existent-task")
+        self.assertEqual(cm.exception.code, 1)
 
     def test_handle_cron_success(self):
         self.mock_input.return_value = "0 9 * * 1"  # Every Monday at 9am
         task_title = "Weekly report"
-        wren_wrapper.handle_cron(self.notes_dir, task_title)
+        with self.assertRaises(SystemExit) as cm:
+            wren_wrapper.handle_cron(self.notes_dir, task_title)
+        self.assertEqual(cm.exception.code, 0)
 
         expected_file = self.notes_dir / f"0 9 * * 1 {task_title}"
         self.assertTrue(expected_file.exists())
         self.mock_print_quiet.assert_called_with(
             f"Created repeating task: {expected_file}"
         )
-        self.mock_exit.assert_called_once_with(0)
 
     def test_handle_cron_file_exists(self):
         self.mock_input.return_value = "0 9 * * 1"
         task_title = "Weekly report"
         (self.notes_dir / f"0 9 * * 1 {task_title}").touch()
 
-        wren_wrapper.handle_cron(self.notes_dir, task_title)
-        self.mock_exit.assert_called_once_with(1)
+        with self.assertRaises(SystemExit) as cm:
+            wren_wrapper.handle_cron(self.notes_dir, task_title)
+        self.assertEqual(cm.exception.code, 1)
 
     def test_handle_future_with_zenity(self):
         # Pretend zenity is installed and DISPLAY is set
@@ -159,14 +167,15 @@ class TestWrenWrapper(unittest.TestCase):
                 args=[], returncode=0, stdout="2025-12-25\n"
             )
             task_title = "Buy presents"
-            wren_wrapper.handle_future(self.notes_dir, task_title)
+            with self.assertRaises(SystemExit) as cm:
+                wren_wrapper.handle_future(self.notes_dir, task_title)
+            self.assertEqual(cm.exception.code, 0)
 
             expected_file = self.notes_dir / f"2025-12-25 {task_title}"
             self.assertTrue(expected_file.exists())
             self.mock_print_quiet.assert_called_with(
                 f"Created future task: {expected_file}"
             )
-            self.mock_exit.assert_called_once_with(0)
             self.assertIn("zenity", self.mock_run.call_args[0][0])
 
     def test_handle_future_zenity_cancel(self):
@@ -175,19 +184,21 @@ class TestWrenWrapper(unittest.TestCase):
             self.mock_run.return_value = subprocess.CompletedProcess(
                 args=[], returncode=1, stdout=""  # User cancelled
             )
-            wren_wrapper.handle_future(self.notes_dir, "A task")
+            with self.assertRaises(SystemExit) as cm:
+                wren_wrapper.handle_future(self.notes_dir, "A task")
+            self.assertEqual(cm.exception.code, 1)
             self.mock_print_quiet.assert_called_once_with("Date selection cancelled.")
-            self.mock_exit.assert_called_once_with(1)
 
     def test_handle_future_cli_fallback(self):
         self.mock_which.side_effect = lambda x: "/usr/bin/wren" if x == "wren" else None  # zenity not found
         self.mock_input.return_value = "2026-01-15"
         task_title = "New year resolutions"
-        wren_wrapper.handle_future(self.notes_dir, task_title)
+        with self.assertRaises(SystemExit) as cm:
+            wren_wrapper.handle_future(self.notes_dir, task_title)
+        self.assertEqual(cm.exception.code, 0)
 
         expected_file = self.notes_dir / f"2026-01-15 {task_title}"
         self.assertTrue(expected_file.exists())
-        self.mock_exit.assert_called_once_with(0)
 
     def test_handle_interactive_done_multiple_matches_select_one(self):
         self.mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=0, stdout="  - task one\n  - task two")
@@ -216,14 +227,14 @@ class TestWrenWrapper(unittest.TestCase):
         pattern = "the-only"
         remaining_args = ["-d", "the-only"]
 
-        wren_wrapper.handle_interactive_done(wren_path, pattern, remaining_args)
+        with self.assertRaises(SystemExit):
+            wren_wrapper.handle_interactive_done(wren_path, pattern, remaining_args)
 
         # Should call to list candidates, find one, then proxy original command
         self.mock_run.assert_has_calls([
             call([wren_path, '-d', pattern], capture_output=True),
             call([wren_path, *remaining_args])
         ])
-        self.mock_exit.assert_called_once()
 
     def test_handle_interactive_done_no_matches(self):
         # wren returns an error or empty stdout
@@ -233,31 +244,33 @@ class TestWrenWrapper(unittest.TestCase):
         pattern = "nonexistent"
         remaining_args = ["-d", "nonexistent"]
 
-        wren_wrapper.handle_interactive_done(wren_path, pattern, remaining_args)
+        with self.assertRaises(SystemExit):
+            wren_wrapper.handle_interactive_done(wren_path, pattern, remaining_args)
 
         # Should call to list, find none, then proxy original command
         self.mock_run.assert_has_calls([
             call([wren_path, '-d', pattern], capture_output=True),
             call([wren_path, *remaining_args])
         ])
-        self.mock_exit.assert_called_once()
 
     # --- Test `main` function (integration) ---
     def test_main_proxy_to_wren(self):
-        wren_wrapper.main(["-l", "some_pattern"])
+        with self.assertRaises(SystemExit) as cm:
+            wren_wrapper.main(["-l", "some_pattern"])
+        self.assertEqual(cm.exception.code, 0)
         self.mock_run.assert_called_once_with(
             ['/fake/path/to/wren', '-l', 'some_pattern'],
             text=True, check=False, capture_output=False, encoding='utf-8'
         )
-        self.mock_exit.assert_called_once_with(0)
 
     def test_main_help_command(self):
         with patch("argparse.ArgumentParser.print_help") as mock_print_help:
-            wren_wrapper.main(["--help"])
+            with self.assertRaises(SystemExit) as cm:
+                wren_wrapper.main(["--help"])
+            self.assertEqual(cm.exception.code, 0)
             self.mock_run.assert_called_once_with(['/fake/path/to/wren', '--help'])
             self.mock_print_quiet.assert_called_with("\n--- wren_wrapper help ---")
             mock_print_help.assert_called_once()
-            self.mock_exit.assert_called_once_with(0)
 
     def test_main_verbose_flag(self):
         self.assertFalse(wren_wrapper.VERBOSE)
@@ -270,8 +283,9 @@ class TestWrenWrapper(unittest.TestCase):
         self.assertTrue(wren_wrapper.QUIET)
 
     def test_main_mutually_exclusive_commands(self):
-        wren_wrapper.main(["--cron", "a", "--future", "b"])
-        self.mock_exit.assert_called_once_with(1)
+        with self.assertRaises(SystemExit) as cm:
+            wren_wrapper.main(["--cron", "a", "--future", "b"])
+        self.assertEqual(cm.exception.code, 1)
 
 
 if __name__ == "__main__":
