@@ -352,7 +352,7 @@ def main(argv: Optional[Sequence[str]] = None):
 
     if "help" in args and args.help:
         run_wren(wren_path, ["--help"])
-        print("\n--- wren_wrapper help ---")
+        print_quiet("\n--- wren_wrapper help ---")
         parser.print_help()
         raise SystemExit(0)
 
