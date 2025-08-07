@@ -66,10 +66,14 @@ def main(argv=None):
         sys.exit(result.returncode)
     else:
         if args.verbose:
-            print(
-                f"Condition not met (day {day_of_year}, offset {args.offset}, interval {args.interval}). "
-                "Not executing command."
+            days_until_next = args.interval - (
+                (day_of_year - args.offset) % args.interval
             )
+            print(
+                f"Condition not met (day {day_of_year}, offset {args.offset}, interval {args.interval})."
+            )
+            print(f"Next execution in {days_until_next} day(s).")
+            print("Not executing command.")
         sys.exit(0)
 
 

@@ -37,7 +37,8 @@ The script must accept arguments using the `argparse` module.
 4. If the condition is not met, the script should exit with status code `0`
    without executing the command.
    - If `--verbose` is specified, a message indicating that the condition was not
-     met will be printed to stdout.
+     met will be printed to stdout, followed by a message with the number of
+     days until the next execution.
 
 ## Error Handling
 

@@ -158,6 +158,7 @@ class TestRunOnInterval(unittest.TestCase):
 
         output = mock_stdout.getvalue()
         self.assertIn("Condition not met", output)
+        self.assertIn("Next execution in 4 day(s).", output)
         self.assertIn("Not executing command", output)
         mock_run.assert_not_called()
 
