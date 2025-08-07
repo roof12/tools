@@ -88,7 +88,7 @@ class TestWrenWrapper(unittest.TestCase):
 
     def test_get_notes_dir_success(self):
         notes_dir = wren_wrapper.get_notes_dir()
-        self.assertEqual(notes_dir, self.notes_dir.resolve())
+        self.assertEqual(notes_dir, self.notes_dir)
 
     def test_get_notes_dir_config_missing(self):
         self.config_path.unlink()
@@ -214,8 +214,8 @@ class TestWrenWrapper(unittest.TestCase):
 
         # Check that we first listed candidates, then executed the specific one
         self.mock_run.assert_has_calls([
-            call([wren_path, '-d', pattern], capture_output=True),
-            call([wren_path, *final_args])
+            call([wren_path, '-d', pattern], text=True, check=False, capture_output=True, encoding="utf-8"),
+            call([wren_path, *final_args], text=True, check=False, capture_output=False, encoding="utf-8")
         ])
 
     def test_handle_interactive_done_single_match(self):
@@ -231,8 +231,8 @@ class TestWrenWrapper(unittest.TestCase):
 
         # Should call to list candidates, find one, then proxy original command
         self.mock_run.assert_has_calls([
-            call([wren_path, '-d', pattern], capture_output=True),
-            call([wren_path, *remaining_args])
+            call([wren_path, '-d', pattern], text=True, check=False, capture_output=True, encoding="utf-8"),
+            call([wren_path, *remaining_args], text=True, check=False, capture_output=False, encoding="utf-8")
         ])
 
     def test_handle_interactive_done_no_matches(self):
@@ -248,8 +248,8 @@ class TestWrenWrapper(unittest.TestCase):
 
         # Should call to list, find none, then proxy original command
         self.mock_run.assert_has_calls([
-            call([wren_path, '-d', pattern], capture_output=True),
-            call([wren_path, *remaining_args])
+            call([wren_path, '-d', pattern], text=True, check=False, capture_output=True, encoding="utf-8"),
+            call([wren_path, *remaining_args], text=True, check=False, capture_output=False, encoding="utf-8")
         ])
 
     # --- Test `main` function (integration) ---
@@ -267,18 +267,23 @@ class TestWrenWrapper(unittest.TestCase):
             with self.assertRaises(SystemExit) as cm:
                 wren_wrapper.main(["--help"])
             self.assertEqual(cm.exception.code, 0)
-            self.mock_run.assert_called_once_with(['/fake/path/to/wren', '--help'])
+            self.mock_run.assert_called_once_with(
+                ['/fake/path/to/wren', '--help'],
+                text=True, check=False, capture_output=False, encoding='utf-8'
+            )
             self.mock_print_quiet.assert_called_with("\n--- wren_wrapper help ---")
             mock_print_help.assert_called_once()
 
     def test_main_verbose_flag(self):
         self.assertFalse(wren_wrapper.VERBOSE)
-        wren_wrapper.main(["-v", "-l"])
+        with self.assertRaises(SystemExit):
+            wren_wrapper.main(["-v", "-l"])
         self.assertTrue(wren_wrapper.VERBOSE)
 
     def test_main_quiet_flag(self):
         self.assertFalse(wren_wrapper.QUIET)
-        wren_wrapper.main(["-q", "-l"])
+        with self.assertRaises(SystemExit):
+            wren_wrapper.main(["-q", "-l"])
         self.assertTrue(wren_wrapper.QUIET)
 
     def test_main_mutually_exclusive_commands(self):

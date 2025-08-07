@@ -174,7 +174,7 @@ def handle_cron(notes_dir: pathlib.Path, task_title: str):
                 )
         except (EOFError, KeyboardInterrupt):
             print("\nAborted by user.", file=sys.stderr)
-            sys.exit(1)
+            raise SystemExit(1)
 
     filename = f"{schedule.strip()} {task_title}"
     filepath = notes_dir / filename
@@ -235,11 +235,11 @@ def handle_future(notes_dir: pathlib.Path, task_title: str):
                 print("Invalid date format. Please use YYYY-MM-DD.", file=sys.stderr)
             except (EOFError, KeyboardInterrupt):
                 print("\nAborted by user.", file=sys.stderr)
-                sys.exit(1)
+                raise SystemExit(1)
 
     if not date_str:
         print("Error: Could not determine date.", file=sys.stderr)
-        sys.exit(1)
+        raise SystemExit(1)
 
     filename = f"{date_str} {task_title}"
     filepath = notes_dir / filename
@@ -277,7 +277,7 @@ def handle_exact_done(notes_dir: pathlib.Path, task_title: str):
         print(
             f"Error: Could not create 'done' directory {done_dir}: {e}", file=sys.stderr
         )
-        sys.exit(1)
+        raise SystemExit(1)
 
     try:
         shutil.move(source_path, dest_path)
@@ -363,7 +363,7 @@ def main(argv: Optional[Sequence[str]] = None):
             "Error: --cron, --future, and --exact are mutually exclusive.",
             file=sys.stderr,
         )
-        sys.exit(1)
+        raise SystemExit(1)
 
     notes_dir = get_notes_dir()
 
