@@ -42,7 +42,7 @@ def find_wren_executable() -> str:
     wren_path = shutil.which("wren")
     if not wren_path:
         print("Error: 'wren' executable not found on $PATH.", file=sys.stderr)
-        sys.exit(2)
+        raise SystemExit(2)
     print_verbose(f"Found wren executable at {wren_path}")
     return wren_path
 
@@ -55,7 +55,7 @@ def get_notes_dir() -> pathlib.Path:
     print_verbose(f"Reading config from {config_path}")
     if not config_path.is_file():
         print(f"Error: Config file not found at {config_path}", file=sys.stderr)
-        sys.exit(2)
+        raise SystemExit(2)
     try:
         with open(config_path, "r", encoding="utf-8") as f:
             config = json.load(f)
@@ -66,7 +66,7 @@ def get_notes_dir() -> pathlib.Path:
             f"Error: Could not read 'notes_dir' from {config_path}. {e}",
             file=sys.stderr,
         )
-        sys.exit(2)
+        raise SystemExit(2)
 
     if not notes_dir.exists():
         print_verbose(f"Notes directory {notes_dir} does not exist. Creating it.")
@@ -77,7 +77,7 @@ def get_notes_dir() -> pathlib.Path:
                 f"Error: Could not create notes directory {notes_dir}: {e}",
                 file=sys.stderr,
             )
-            sys.exit(1)
+            raise SystemExit(1)
 
     return notes_dir
 
@@ -120,7 +120,7 @@ def handle_interactive_done(wren_path: str, pattern: str, remaining_args: List[s
                 selection = input(f"Selection (1-{len(candidates)}, q to abort) > ")
                 if selection.lower() == "q":
                     print_quiet("Aborted.")
-                    sys.exit(1)
+                    raise SystemExit(1)
                 choice = int(selection)
                 if 1 <= choice <= len(candidates):
                     chosen_task = candidates[choice - 1]
@@ -131,20 +131,20 @@ def handle_interactive_done(wren_path: str, pattern: str, remaining_args: List[s
                     final_args[p_index] = chosen_task
 
                     result = run_wren(wren_path, final_args)
-                    sys.exit(result.returncode)
+                    raise SystemExit(result.returncode)
                 else:
                     print_quiet("Invalid selection.")
             except (ValueError, IndexError):
                 print_quiet("Invalid input. Please enter a number from the list.")
             except (EOFError, KeyboardInterrupt):
                 print("\nAborted by user.", file=sys.stderr)
-                sys.exit(1)
+                raise SystemExit(1)
     else:
         # If 0 or 1 candidates, just run the original command.
         # This allows wren to handle success or "no matches found" errors.
         print_verbose("Zero or one candidate found, proxying original command to wren.")
         result = run_wren(wren_path, remaining_args)
-        sys.exit(result.returncode)
+        raise SystemExit(result.returncode)
 
 
 def handle_cron(notes_dir: pathlib.Path, task_title: str):
@@ -184,13 +184,13 @@ def handle_cron(notes_dir: pathlib.Path, task_title: str):
         with open(filepath, "x", encoding="utf-8") as f:
             pass  # Create empty file
         print_quiet(f"Created repeating task: {filepath}")
-        sys.exit(0)
+        raise SystemExit(0)
     except FileExistsError:
         print(f"Error: Task file already exists: {filepath}", file=sys.stderr)
-        sys.exit(1)
+        raise SystemExit(1)
     except OSError as e:
         print(f"Error: Could not create task file {filepath}: {e}", file=sys.stderr)
-        sys.exit(1)
+        raise SystemExit(1)
 
 
 def handle_future(notes_dir: pathlib.Path, task_title: str):
@@ -218,7 +218,7 @@ def handle_future(notes_dir: pathlib.Path, task_title: str):
                 date_str = result.stdout.strip()
             else:
                 print_quiet("Date selection cancelled.")
-                sys.exit(1)  # Graceful exit on cancel
+                raise SystemExit(1)  # Graceful exit on cancel
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
             print_verbose(f"Zenity call failed: {e}. Falling back to CLI prompt.")
             use_zenity = False  # Fallback
@@ -249,13 +249,13 @@ def handle_future(notes_dir: pathlib.Path, task_title: str):
         with open(filepath, "x", encoding="utf-8") as f:
             pass  # Create empty file
         print_quiet(f"Created future task: {filepath}")
-        sys.exit(0)
+        raise SystemExit(0)
     except FileExistsError:
         print(f"Error: Task file already exists: {filepath}", file=sys.stderr)
-        sys.exit(1)
+        raise SystemExit(1)
     except OSError as e:
         print(f"Error: Could not create task file {filepath}: {e}", file=sys.stderr)
-        sys.exit(1)
+        raise SystemExit(1)
 
 
 def handle_exact_done(notes_dir: pathlib.Path, task_title: str):
@@ -265,7 +265,7 @@ def handle_exact_done(notes_dir: pathlib.Path, task_title: str):
 
     if not source_path.is_file():
         print(f"Error: Task not found with exact name: '{task_title}'", file=sys.stderr)
-        sys.exit(1)
+        raise SystemExit(1)
 
     done_dir = notes_dir / "done"
     dest_path = done_dir / task_title
@@ -282,13 +282,13 @@ def handle_exact_done(notes_dir: pathlib.Path, task_title: str):
     try:
         shutil.move(source_path, dest_path)
         print_quiet(f"Marked done: {task_title}")
-        sys.exit(0)
+        raise SystemExit(0)
     except OSError as e:
         print(
             f"Error: Could not move task file '{task_title}' to done directory: {e}",
             file=sys.stderr,
         )
-        sys.exit(1)
+        raise SystemExit(1)
 
 
 def main(argv: Optional[Sequence[str]] = None):
@@ -354,7 +354,7 @@ def main(argv: Optional[Sequence[str]] = None):
         run_wren(wren_path, ["--help"])
         print("\n--- wren_wrapper help ---")
         parser.print_help()
-        sys.exit(0)
+        raise SystemExit(0)
 
     # Check for mutually exclusive wrapper commands
     command_count = sum(1 for cmd in ["cron", "future", "exact"] if cmd in args)
@@ -403,7 +403,7 @@ def main(argv: Optional[Sequence[str]] = None):
         # If no wrapper command was used, just proxy to wren
         print_verbose("proxying to wren")
         result = run_wren(wren_path, remaining_args)
-        sys.exit(result.returncode)
+        raise SystemExit(result.returncode)
 
 
 if __name__ == "__main__":
