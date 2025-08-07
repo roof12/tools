@@ -209,15 +209,14 @@ class TestWrenWrapper(unittest.TestCase):
         remaining_args = ["-d", "task", "--other-flag"]
         final_args = ["-d", "task two", "--other-flag"]
 
-
-        wren_wrapper.handle_interactive_done(wren_path, pattern, remaining_args)
+        with self.assertRaises(SystemExit):
+            wren_wrapper.handle_interactive_done(wren_path, pattern, remaining_args)
 
         # Check that we first listed candidates, then executed the specific one
         self.mock_run.assert_has_calls([
             call([wren_path, '-d', pattern], capture_output=True),
             call([wren_path, *final_args])
         ])
-        self.mock_exit.assert_called_once() # Should exit with wren's return code
 
     def test_handle_interactive_done_single_match(self):
         # wren returns the single match
