@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-wren-wrapper - A Python wrapper for the 'wren' CLI task manager.
+wren_wrapper - A Python wrapper for the 'wren' CLI task manager.
 
 This script provides quality-of-life enhancements to wren, including:
 - Interactive task completion for ambiguous patterns.
@@ -28,7 +28,7 @@ QUIET = False
 def print_verbose(message: str):
     """Prints a message to stderr if verbose mode is enabled."""
     if VERBOSE and not QUIET:
-        print(f"wren-wrapper: {message}", file=sys.stderr)
+        print(f"wren_wrapper: {message}", file=sys.stderr)
 
 
 def print_quiet(message: str):
@@ -274,7 +274,9 @@ def handle_exact_done(notes_dir: pathlib.Path, task_title: str):
         done_dir.mkdir(parents=True, exist_ok=True)
         print_verbose(f"Ensured 'done' directory exists: {done_dir}")
     except OSError as e:
-        print(f"Error: Could not create 'done' directory {done_dir}: {e}", file=sys.stderr)
+        print(
+            f"Error: Could not create 'done' directory {done_dir}: {e}", file=sys.stderr
+        )
         sys.exit(1)
 
     try:
@@ -282,12 +284,15 @@ def handle_exact_done(notes_dir: pathlib.Path, task_title: str):
         print_quiet(f"Marked done: {task_title}")
         sys.exit(0)
     except OSError as e:
-        print(f"Error: Could not move task file '{task_title}' to done directory: {e}", file=sys.stderr)
+        print(
+            f"Error: Could not move task file '{task_title}' to done directory: {e}",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
 
 def main(argv: Optional[Sequence[str]] = None):
-    """Main function for the wren-wrapper."""
+    """Main function for the wren_wrapper."""
     global VERBOSE, QUIET
     parser = argparse.ArgumentParser(
         description="A Python wrapper for the 'wren' CLI task manager.",
@@ -347,14 +352,17 @@ def main(argv: Optional[Sequence[str]] = None):
 
     if "help" in args and args.help:
         run_wren(wren_path, ["--help"])
-        print("\n--- wren-wrapper help ---")
+        print("\n--- wren_wrapper help ---")
         parser.print_help()
         sys.exit(0)
 
     # Check for mutually exclusive wrapper commands
     command_count = sum(1 for cmd in ["cron", "future", "exact"] if cmd in args)
     if command_count > 1:
-        print("Error: --cron, --future, and --exact are mutually exclusive.", file=sys.stderr)
+        print(
+            "Error: --cron, --future, and --exact are mutually exclusive.",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     notes_dir = get_notes_dir()
