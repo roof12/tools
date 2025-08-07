@@ -2,6 +2,7 @@
 
 import argparse
 import datetime
+import io
 import subprocess
 import sys
 import unittest
@@ -127,6 +128,51 @@ class TestRunOnInterval(unittest.TestCase):
         self.assertIn(
             "argument offset: -1 is not a non-negative integer", result.stderr
         )
+
+    @patch("utilities.run_on_interval.run_on_interval.subprocess.run")
+    @patch("utilities.run_on_interval.run_on_interval.datetime.date")
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_verbose_output_when_executing(self, mock_stdout, mock_date, mock_run):
+        """Test verbose output is printed when the command is executed."""
+        mock_date.today.return_value.timetuple.return_value.tm_yday = 10
+        mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=0)
+
+        with self.assertRaises(SystemExit):
+            main(["--verbose", "5", "0", "echo", "Success"])
+
+        output = mock_stdout.getvalue()
+        self.assertIn("Condition met", output)
+        self.assertIn("Executing command", output)
+
+    @patch("utilities.run_on_interval.run_on_interval.subprocess.run")
+    @patch("utilities.run_on_interval.run_on_interval.datetime.date")
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_verbose_output_when_not_executing(
+        self, mock_stdout, mock_date, mock_run
+    ):
+        """Test verbose output is printed when the command is not executed."""
+        mock_date.today.return_value.timetuple.return_value.tm_yday = 11
+
+        with self.assertRaises(SystemExit):
+            main(["-v", "5", "0", "echo", "Success"])
+
+        output = mock_stdout.getvalue()
+        self.assertIn("Condition not met", output)
+        self.assertIn("Not executing command", output)
+        mock_run.assert_not_called()
+
+    @patch("utilities.run_on_interval.run_on_interval.subprocess.run")
+    @patch("utilities.run_on_interval.run_on_interval.datetime.date")
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_no_verbose_output_by_default(self, mock_stdout, mock_date, mock_run):
+        """Test no verbose output is printed by default."""
+        mock_date.today.return_value.timetuple.return_value.tm_yday = 10
+        mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=0)
+
+        with self.assertRaises(SystemExit):
+            main(["5", "0", "echo", "Success"])
+
+        self.assertEqual(mock_stdout.getvalue(), "")
 
 
 if __name__ == "__main__":

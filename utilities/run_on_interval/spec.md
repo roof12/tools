@@ -17,6 +17,7 @@ The script must accept arguments using the `argparse` module.
 2. `offset`: A required positional argument. Must be a non-negative integer.
 3. `command`: A required argument that captures the command to be executed
    and all its subsequent arguments (e.g., using `nargs=argparse.REMAINDER`).
+4. `-v, --verbose`: An optional flag that enables verbose output.
 
 ## Behavior
 
@@ -28,11 +29,15 @@ The script must accept arguments using the `argparse` module.
 
 3. If the result of the modulo operation is `0`, the script will execute the
    provided `command` with its arguments.
+   - If `--verbose` is specified, a message indicating that the condition was met
+     and the command is being executed will be printed to stdout.
    - The command should be executed using `subprocess.run()`.
    - The script should exit with the return code of the executed command.
 
 4. If the condition is not met, the script should exit with status code `0`
    without executing the command.
+   - If `--verbose` is specified, a message indicating that the condition was not
+     met will be printed to stdout.
 
 ## Error Handling
 
@@ -49,4 +54,5 @@ The script must accept arguments using the `argparse` module.
 ## Example Usage
 
 utilities/run_on_interval/run_on_interval.py 7 0 echo "This runs on a 7-day interval"
+utilities/run_on_interval/run_on_interval.py --verbose 7 0 echo "This runs on a 7-day interval"
 utilities/run_on_interval/run_on_interval.py 30 5 ls -l /tmp

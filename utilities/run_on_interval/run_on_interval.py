@@ -33,6 +33,9 @@ def main(argv=None):
         description="Conditionally execute a command based on the day of the year."
     )
     parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Enable verbose output."
+    )
+    parser.add_argument(
         "interval", type=positive_int, help="The interval in days (positive integer)."
     )
     parser.add_argument(
@@ -54,9 +57,19 @@ def main(argv=None):
     day_of_year = datetime.date.today().timetuple().tm_yday
 
     if (day_of_year - args.offset) % args.interval == 0:
+        if args.verbose:
+            print(
+                f"Condition met (day {day_of_year}, offset {args.offset}, interval {args.interval}). "
+                f"Executing command: {' '.join(args.command)}"
+            )
         result = subprocess.run(args.command, check=False)
         sys.exit(result.returncode)
     else:
+        if args.verbose:
+            print(
+                f"Condition not met (day {day_of_year}, offset {args.offset}, interval {args.interval}). "
+                "Not executing command."
+            )
         sys.exit(0)
 
 
