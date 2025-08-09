@@ -140,11 +140,9 @@ def handle_interactive_done(wren_path: str, pattern: str, remaining_args: List[s
                 print("\nAborted by user.", file=sys.stderr)
                 raise SystemExit(1)
     else:
-        # If 0 or 1 candidates, just run the original command.
-        # This allows wren to handle success or "no matches found" errors.
-        print_verbose("Zero or one candidate found, proxying original command to wren.")
-        result = run_wren(wren_path, remaining_args)
-        raise SystemExit(result.returncode)
+        # If 0 or 1 candidates, just print the result of the previous call
+        print(list_result.stdout, end="")
+        print_verbose("Zero or one candidate found. Nothing more to do.")
 
 
 def handle_cron(notes_dir: pathlib.Path, task_title: str):
