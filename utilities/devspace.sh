@@ -19,7 +19,8 @@ if [ -z "$2" ]; then
   exit 1
 fi
 
-SLEEP_TIME="0.25"
+# this value may need to be adjusted; if it is too fast, nvim will open in the calling terminal
+SLEEP_TIME="1"
 
 # The target i3 workspace.
 WORKSPACE_NAME="$1"
