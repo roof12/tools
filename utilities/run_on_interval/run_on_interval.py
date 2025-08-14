@@ -27,10 +27,21 @@ def non_negative_int(value):
     return ivalue
 
 
+def get_usage_info():
+    """Constructs description and epilog for argparse, including current day."""
+    description = "Conditionally execute a command based on the day of the year."
+    day_of_year = datetime.date.today().timetuple().tm_yday
+    epilog = f"Today is day {day_of_year}."
+    return description, epilog
+
+
 def main(argv=None):
     """Parse arguments and execute command if conditions are met."""
+    description, epilog = get_usage_info()
     parser = argparse.ArgumentParser(
-        description="Conditionally execute a command based on the day of the year."
+        description=description,
+        epilog=epilog,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Enable verbose output."

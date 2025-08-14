@@ -11,7 +11,9 @@ will be executed.
 
 ## Command-line arguments
 
-The script must accept arguments using the `argparse` module.
+The script must accept arguments using the `argparse` module. The help message
+(accessible via `-h` or `--help`) will display the current day of the year for
+the user's reference.
 
 1. `interval`: A required positional argument. Must be a positive integer.
 2. `offset`: A required positional argument. Must be a non-negative integer.

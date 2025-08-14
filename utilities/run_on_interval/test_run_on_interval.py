@@ -40,6 +40,35 @@ class TestRunOnInterval(unittest.TestCase):
         with self.assertRaises(ValueError):
             non_negative_int("not-a-number")
 
+    @patch("utilities.run_on_interval.run_on_interval.argparse.ArgumentParser")
+    @patch("utilities.run_on_interval.run_on_interval.datetime.date")
+    def test_main_creates_parser_with_usage_info(self, mock_date, mock_ArgumentParser):
+        """Test that main creates ArgumentParser with dynamic usage info."""
+        mock_date.today.return_value.timetuple.return_value.tm_yday = 42
+
+        mock_parser_instance = mock_ArgumentParser.return_value
+
+        # To prevent the rest of main() from running, we can make parse_args() raise an exception.
+        class SentinelException(Exception):
+            pass
+
+        mock_parser_instance.parse_args.side_effect = SentinelException
+
+        with self.assertRaises(SentinelException):
+            main([])  # argv doesn't matter here
+
+        # Now check how ArgumentParser was called.
+        mock_ArgumentParser.assert_called_once()
+        _, kwargs = mock_ArgumentParser.call_args
+        self.assertEqual(
+            kwargs["description"],
+            "Conditionally execute a command based on the day of the year.",
+        )
+        self.assertIn("day 42", kwargs["epilog"])
+        self.assertEqual(
+            kwargs["formatter_class"], argparse.RawDescriptionHelpFormatter
+        )
+
     @patch("utilities.run_on_interval.run_on_interval.subprocess.run")
     @patch("utilities.run_on_interval.run_on_interval.datetime.date")
     def test_command_executes_on_schedule(self, mock_date, mock_run):
@@ -147,9 +176,7 @@ class TestRunOnInterval(unittest.TestCase):
     @patch("utilities.run_on_interval.run_on_interval.subprocess.run")
     @patch("utilities.run_on_interval.run_on_interval.datetime.date")
     @patch("sys.stdout", new_callable=io.StringIO)
-    def test_verbose_output_when_not_executing(
-        self, mock_stdout, mock_date, mock_run
-    ):
+    def test_verbose_output_when_not_executing(self, mock_stdout, mock_date, mock_run):
         """Test verbose output is printed when the command is not executed."""
         mock_date.today.return_value.timetuple.return_value.tm_yday = 11
 
