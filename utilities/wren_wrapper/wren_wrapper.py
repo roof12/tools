@@ -301,6 +301,7 @@ def main(argv: Optional[Sequence[str]] = None):
     parser.add_argument(
         "-c",
         "--cron",
+        nargs="+",
         metavar="TASK_TITLE",
         help="Launch cron helper for a new repeating task.",
     )
@@ -366,7 +367,7 @@ def main(argv: Optional[Sequence[str]] = None):
     notes_dir = get_notes_dir()
 
     if "cron" in args:
-        handle_cron(notes_dir, args.cron)
+        handle_cron(notes_dir, " ".join(args.cron))
     elif "future" in args:
         handle_future(notes_dir, args.future)
     elif "exact" in args:

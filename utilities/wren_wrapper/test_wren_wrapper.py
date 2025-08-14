@@ -291,6 +291,19 @@ class TestWrenWrapper(unittest.TestCase):
             wren_wrapper.main(["--cron", "a", "--future", "b"])
         self.assertEqual(cm.exception.code, 1)
 
+    def test_main_cron_multi_word_title(self):
+        self.mock_input.return_value = "0 9 * * 1"  # Every Monday at 9am
+        task_title = "My multi word task"
+        with self.assertRaises(SystemExit) as cm:
+            wren_wrapper.main(["--cron", "My", "multi", "word", "task"])
+        self.assertEqual(cm.exception.code, 0)
+
+        expected_file = self.notes_dir / f"0 9 * * 1 {task_title}"
+        self.assertTrue(expected_file.exists())
+        self.mock_print_quiet.assert_called_with(
+            f"Created repeating task: {expected_file}"
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
