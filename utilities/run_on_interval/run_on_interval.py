@@ -70,7 +70,7 @@ def main(argv=None):
     if (day_of_year - args.offset) % args.interval == 0:
         if args.verbose:
             print(
-                f"Condition met (day {day_of_year}, offset {args.offset}, interval {args.interval}). "
+                f"Condition met (day {day_of_year}, interval {args.interval}, offset {args.offset})."
                 f"Executing command: {' '.join(args.command)}"
             )
         result = subprocess.run(args.command, check=False)
@@ -81,7 +81,7 @@ def main(argv=None):
                 (day_of_year - args.offset) % args.interval
             )
             print(
-                f"Condition not met (day {day_of_year}, offset {args.offset}, interval {args.interval})."
+                f"Condition not met (day {day_of_year}, interval {args.interval}, offset {args.offset}). "
             )
             print(f"Next execution in {days_until_next} day(s).")
             print("Not executing command.")
