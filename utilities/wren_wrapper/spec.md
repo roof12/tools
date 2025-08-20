@@ -40,9 +40,9 @@ The wrapper must behave identically to `wren` for all original commands, flags, 
 w \[WRAPPER\_OPT …] \[--] \[WREN\_OPT … | task …]
 
 Wrapper‑specific options (may be combined with native wren flags):
--c, --cron \<TASK\_TITLE>
+-c, --cron \<TASK\_TITLE ...>
 Launch cron helper (see §4.2)
--f, --future \<TASK\_TITLE>
+-f, --future \<TASK\_TITLE ...>
 Launch future‑date helper (see §4.3)
 -x, --exact \<TASK\_TITLE>
 Mark task done by exact filename (see §4.4)
@@ -208,7 +208,7 @@ Cron cheat‑sheet:
 Enter cron schedule: 0 4 * * *
 Created repeating task: /home/user/notes/0 4 * * * Pay rent
 
-$ w -f "Buy flowers"
+$ w -f Buy flowers
 # (zenity calendar appears)
 Created future task: /home/user/notes/2025-07-02 Buy flowers
 ````

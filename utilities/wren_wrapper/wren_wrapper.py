@@ -308,6 +308,7 @@ def main(argv: Optional[Sequence[str]] = None):
     parser.add_argument(
         "-f",
         "--future",
+        nargs="+",
         metavar="TASK_TITLE",
         help="Launch future-date helper for a new one-off task.",
     )
@@ -369,7 +370,7 @@ def main(argv: Optional[Sequence[str]] = None):
     if "cron" in args:
         handle_cron(notes_dir, " ".join(args.cron))
     elif "future" in args:
-        handle_future(notes_dir, args.future)
+        handle_future(notes_dir, " ".join(args.future))
     elif "exact" in args:
         handle_exact_done(notes_dir, args.exact)
 

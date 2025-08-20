@@ -304,6 +304,21 @@ class TestWrenWrapper(unittest.TestCase):
             f"Created repeating task: {expected_file}"
         )
 
+    def test_main_future_multi_word_title(self):
+        # Use CLI fallback to avoid dealing with zenity subprocess mock
+        self.mock_which.side_effect = lambda x: "/usr/bin/wren" if x == "wren" else None
+        self.mock_input.return_value = "2025-02-14"
+        task_title = "Buy Valentine flowers"
+        with self.assertRaises(SystemExit) as cm:
+            wren_wrapper.main(["--future", "Buy", "Valentine", "flowers"])
+        self.assertEqual(cm.exception.code, 0)
+
+        expected_file = self.notes_dir / f"2025-02-14 {task_title}"
+        self.assertTrue(expected_file.exists())
+        self.mock_print_quiet.assert_called_with(
+            f"Created future task: {expected_file}"
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
