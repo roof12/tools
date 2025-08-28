@@ -207,6 +207,7 @@ Cron cheat‑sheet:
 * * * * *  command
 Enter cron schedule: 0 4 * * *
 Created repeating task: /home/user/notes/0 4 * * * Pay rent
+The task will run every day at 04:00.
 
 $ w -f Buy flowers
 # (zenity calendar appears)

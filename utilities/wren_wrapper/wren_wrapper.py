@@ -145,6 +145,69 @@ def handle_interactive_done(wren_path: str, pattern: str, remaining_args: List[s
         print_verbose("Zero or one candidate found. Nothing more to do.")
 
 
+def describe_cron_schedule(schedule: str) -> Optional[str]:
+    """Provides a human-readable description of a simple cron schedule."""
+    parts = schedule.split()
+    if len(parts) != 5:
+        return None
+
+    minute, hour, dom, month, dow = parts
+
+    # This function only describes simple schedules. It won't handle ranges,
+    # steps, or lists (e.g., "1-5", "*/2", "1,3,5").
+    is_simple = all(p.isdigit() or p == "*" for p in parts)
+    if not is_simple:
+        return None
+
+    time_str = f"at {hour.zfill(2)}:{minute.zfill(2)}"
+
+    # Daily
+    if dom == "*" and month == "*" and dow == "*":
+        return f"The task will run every day {time_str}."
+
+    # Weekly
+    if dom == "*" and month == "*" and dow != "*":
+        try:
+            dow_val = int(dow)
+            if not (0 <= dow_val <= 7):  # 7 is also Sunday in some crons
+                return None
+            dow_names = [
+                "Sunday",
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday",
+            ]
+            day_name = dow_names[dow_val]
+            return f"The task will run every week on {day_name} {time_str}."
+        except ValueError:
+            return None
+
+    # Monthly
+    if dom != "*" and month == "*" and dow == "*":
+        return f"The task will run every month on day {dom} {time_str}."
+
+    # Yearly
+    if dom != "*" and month != "*" and dow == "*":
+        try:
+            month_val = int(month)
+            if not (1 <= month_val <= 12):
+                return None
+            month_names = [
+                "", "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December",
+            ]
+            # Follow user's example and omit time for yearly tasks.
+            return f"The task will run every year on {month_names[month_val]} {dom}."
+        except ValueError:
+            return None
+
+    return None
+
+
 def handle_cron(notes_dir: pathlib.Path, task_title: str):
     """Handles the cron helper to create a recurring task."""
     cheat_sheet = textwrap.dedent("""
@@ -182,6 +245,9 @@ def handle_cron(notes_dir: pathlib.Path, task_title: str):
         with open(filepath, "x", encoding="utf-8") as f:
             pass  # Create empty file
         print_quiet(f"Created repeating task: {filepath}")
+        description = describe_cron_schedule(schedule.strip())
+        if description:
+            print_quiet(description)
         raise SystemExit(0)
     except FileExistsError:
         print(f"Error: Task file already exists: {filepath}", file=sys.stderr)
