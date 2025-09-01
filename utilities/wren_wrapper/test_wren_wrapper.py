@@ -299,27 +299,17 @@ class TestWrenWrapper(unittest.TestCase):
         pattern = "the-only"
         remaining_args = ["-d", "the-only"]
 
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(SystemExit) as cm:
             wren_wrapper.handle_interactive_done(wren_path, pattern, remaining_args)
+        self.assertEqual(cm.exception.code, 0)
 
-        # Should call to list candidates, find one, then proxy original command
-        self.mock_run.assert_has_calls(
-            [
-                call(
-                    [wren_path, "-d", pattern],
-                    text=True,
-                    check=False,
-                    capture_output=True,
-                    encoding="utf-8",
-                ),
-                call(
-                    [wren_path, *remaining_args],
-                    text=True,
-                    check=False,
-                    capture_output=False,
-                    encoding="utf-8",
-                ),
-            ]
+        # Should call to list candidates, find one, and exit immediately (not proxy)
+        self.mock_run.assert_called_once_with(
+            [wren_path, "-d", pattern],
+            text=True,
+            check=False,
+            capture_output=True,
+            encoding="utf-8",
         )
 
     def test_handle_interactive_done_no_matches(self):
@@ -332,8 +322,10 @@ class TestWrenWrapper(unittest.TestCase):
         pattern = "nonexistent"
         remaining_args = ["-d", "nonexistent"]
 
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(SystemExit) as cm:
             wren_wrapper.handle_interactive_done(wren_path, pattern, remaining_args)
+        # Should exit with the same code as the original command
+        self.assertEqual(cm.exception.code, 1)
 
         # Should call to list, find none, then proxy original command
         self.mock_run.assert_has_calls(
@@ -400,7 +392,7 @@ class TestWrenWrapper(unittest.TestCase):
             wren_wrapper.main(["--cron", "a", "--future", "b"])
         self.assertEqual(cm.exception.code, 1)
 
-    def zztest_main_cron_multi_word_title(self):
+    def test_main_cron_multi_word_title(self):
         self.mock_input.return_value = "0 9 * * 1"  # Every Monday at 9am
         task_title = "My multi word task"
         with self.assertRaises(SystemExit) as cm:
@@ -409,7 +401,7 @@ class TestWrenWrapper(unittest.TestCase):
 
         expected_file = self.notes_dir / f"0 9 * * 1 {task_title}"
         self.assertTrue(expected_file.exists())
-        self.mock_print_quiet.assert_called_with(
+        self.mock_print_quiet.assert_any_call(
             f"Created repeating task: {expected_file}"
         )
 

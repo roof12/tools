@@ -143,6 +143,12 @@ def handle_interactive_done(wren_path: str, pattern: str, remaining_args: List[s
         # If 0 or 1 candidates, just print the result of the previous call
         print(list_result.stdout, end="")
         print_verbose("Zero or one candidate found. Nothing more to do.")
+        # If the original wren command succeeded, we're done
+        if list_result.returncode == 0:
+            raise SystemExit(0)
+        # Otherwise, proxy the original command to show the error
+        result = run_wren(wren_path, remaining_args)
+        raise SystemExit(result.returncode)
 
 
 def describe_cron_schedule(schedule: str) -> Optional[str]:
@@ -237,7 +243,8 @@ def handle_cron(notes_dir: pathlib.Path, task_title: str):
             print("\nAborted by user.", file=sys.stderr)
             raise SystemExit(1)
 
-    filename = f"{schedule.strip()} {task_title}"
+    safe_schedule = schedule.strip().replace("/", "-")
+    filename = f"{safe_schedule} {task_title}"
     filepath = notes_dir / filename
 
     print_verbose(f"Creating cron task file: {filepath}")
